@@ -38,6 +38,7 @@ export default function AdminApp() {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [editingQuestion, setEditingQuestion] = useState(null);
 
   // --- ESTADOS DE AUTENTICAÇÃO ---
   const [token, setToken] = useState(null);
@@ -69,6 +70,29 @@ export default function AdminApp() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDeleteQuestion = async (id) => {
+    if (!window.confirm("Tem certeza que deseja excluir esta questão de forma permanente?")) return;
+    
+    try {
+      const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!res.ok) throw new Error('Erro ao excluir a questão no banco de dados');
+      
+      alert("Questão excluída com sucesso!");
+      fetchQuestions(); // Recarrega a lista
+    } catch (err) {
+      alert(`Falha ao excluir: ${err.message}`);
+    }
+  };
+
+  const handleEditClick = (question) => {
+    setEditingQuestion(question);
+    setCurrentView('add_question');
   };
 
   const handleAuth = async (e) => {
@@ -221,7 +245,7 @@ export default function AdminApp() {
               {isLoading ? <Loader2 size={18} className="animate-spin text-[#1E88E5]" /> : 'Atualizar Lista'}
             </button>
             <button 
-              onClick={() => setCurrentView('add_question')}
+              onClick={() => { setEditingQuestion(null); setCurrentView('add_question'); }}
               className="bg-[#FF6D00] hover:bg-[#E66200] text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-[#FF6D00]/30 transition-all flex items-center gap-2"
             >
               <PlusCircle size={20} /> Nova Questão
@@ -282,8 +306,20 @@ export default function AdminApp() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" title="Editar"><Edit size={18} /></button>
-                        <button className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir"><Trash2 size={18} /></button>
+                        <button 
+                          onClick={() => handleEditClick(q)}
+                          className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" 
+                          title="Editar"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteQuestion(q.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors" 
+                          title="Excluir"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -297,19 +333,20 @@ export default function AdminApp() {
   };
 
   // 3. Formulário de Nova Questão (Adaptado para D1)
-  const AddQuestionView = () => {
+const AddQuestionView = () => {
     const [isSaving, setIsSaving] = useState(false);
+    const isEditing = !!editingQuestion;
     
-    // Estados do Formulário (Mapeados para o banco)
-    const [categoryId, setCategoryId] = useState(1);
-    const [questionText, setQuestionText] = useState('');
-    const [explanation, setExplanation] = useState('');
+    // Estados inicializados com os dados da questão em edição (ou vazios se for nova)
+    const [categoryId, setCategoryId] = useState(isEditing ? editingQuestion.category_id : 1);
+    const [questionText, setQuestionText] = useState(isEditing ? editingQuestion.question_text : '');
+    const [explanation, setExplanation] = useState(isEditing ? (editingQuestion.explanation || '') : '');
     
     const [options, setOptions] = useState([
-      { letter: 'A', text: '', isCorrect: true },
-      { letter: 'B', text: '', isCorrect: false },
-      { letter: 'C', text: '', isCorrect: false },
-      { letter: 'D', text: '', isCorrect: false },
+      { letter: 'A', text: isEditing ? editingQuestion.option_a : '', isCorrect: isEditing ? editingQuestion.correct_answer === 'A' : true },
+      { letter: 'B', text: isEditing ? editingQuestion.option_b : '', isCorrect: isEditing ? editingQuestion.correct_answer === 'B' : false },
+      { letter: 'C', text: isEditing ? editingQuestion.option_c : '', isCorrect: isEditing ? editingQuestion.correct_answer === 'C' : false },
+      { letter: 'D', text: isEditing ? editingQuestion.option_d : '', isCorrect: isEditing ? editingQuestion.correct_answer === 'D' : false },
     ]);
 
     const handleOptionChange = (index, value) => {
@@ -327,13 +364,11 @@ export default function AdminApp() {
     };
 
     const handleSave = async () => {
-      // Validação Básica
       if (!questionText.trim()) return alert("O enunciado da questão é obrigatório.");
       if (options.some(o => !o.text.trim())) return alert("Preencha todas as 4 alternativas.");
 
       const correctAnswerObj = options.find(o => o.isCorrect);
 
-      // Payload exato como esperado pelo Cloudflare Worker
       const payload = {
         category_id: categoryId,
         question_text: questionText,
@@ -347,8 +382,12 @@ export default function AdminApp() {
 
       setIsSaving(true);
       try {
-        const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes`, {
-          method: 'POST',
+        const url = isEditing 
+          ? `${API_URL.replace(/\/$/, '')}/api/questoes/${editingQuestion.id}` 
+          : `${API_URL.replace(/\/$/, '')}/api/questoes`;
+          
+        const res = await fetch(url, {
+          method: isEditing ? 'PUT' : 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}` 
@@ -361,8 +400,9 @@ export default function AdminApp() {
           throw new Error(errData.error || 'Erro ao salvar a questão');
         }
 
-        alert("Questão cadastrada com sucesso!");
-        setCurrentView('questions'); // Volta pra lista
+        alert(isEditing ? "Questão atualizada com sucesso!" : "Questão cadastrada com sucesso!");
+        setEditingQuestion(null);
+        setCurrentView('questions'); 
         
       } catch (err) {
         alert(`Falha ao salvar questão: ${err.message}`);
@@ -374,15 +414,20 @@ export default function AdminApp() {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl pb-10">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setCurrentView('questions')} className="text-gray-400 hover:text-[#1E88E5]">
+          <button 
+            onClick={() => { setEditingQuestion(null); setCurrentView('questions'); }} 
+            className="text-gray-400 hover:text-[#1E88E5]"
+          >
             Voltar
           </button>
-          <h2 className="text-2xl font-bold text-[#2C3E50]">Cadastrar Nova Questão</h2>
+          <h2 className="text-2xl font-bold text-[#2C3E50]">
+            {isEditing ? 'Editar Questão' : 'Cadastrar Nova Questão'}
+          </h2>
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
+          {/* O restante do JSX do formulário (select de matérias, textareas e botões) permanece igual */}
           
-          {/* Matéria */}
           <div className="space-y-2 max-w-sm">
             <label className="text-sm font-semibold text-[#2C3E50]">Matéria (Category)</label>
             <select 
@@ -396,9 +441,8 @@ export default function AdminApp() {
             </select>
           </div>
 
-          {/* Enunciado */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2C3E50]">Enunciado da Questão (question_text)</label>
+            <label className="text-sm font-semibold text-[#2C3E50]">Enunciado da Questão</label>
             <textarea 
               rows="3"
               value={questionText}
@@ -408,12 +452,11 @@ export default function AdminApp() {
             ></textarea>
           </div>
 
-          {/* Alternativas */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-[#2C3E50]">Alternativas</label>
               <span className="text-xs font-bold text-[#FF6D00] bg-[#FF6D00]/10 px-3 py-1 rounded-full">
-                Selecione a resposta correta no círculo
+                Selecione a resposta correta
               </span>
             </div>
             
@@ -440,22 +483,20 @@ export default function AdminApp() {
             ))}
           </div>
 
-          {/* Explicação */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-[#2C3E50]">Explicação (Opcional)</label>
             <textarea 
               rows="2"
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
-              placeholder="Explique o motivo da resposta estar correta (ajuda o aluno na hora do estudo)..."
+              placeholder="Explique o motivo da resposta estar correta..."
               className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#1E88E5] focus:ring-2 focus:ring-[#1E88E5]/20 outline-none transition-all text-[#2C3E50] bg-gray-50 resize-none text-sm"
             ></textarea>
           </div>
 
-          {/* Ações */}
           <div className="pt-6 border-t border-gray-100 flex justify-end gap-4">
             <button 
-              onClick={() => setCurrentView('questions')}
+              onClick={() => { setEditingQuestion(null); setCurrentView('questions'); }}
               disabled={isSaving}
               className="px-6 py-3 rounded-xl font-semibold text-[#2C3E50]/60 hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
@@ -469,7 +510,7 @@ export default function AdminApp() {
               {isSaving ? (
                 <><Loader2 size={20} className="animate-spin" /> Salvando...</>
               ) : (
-                <><Database size={20} /> Salvar no D1</>
+                <><Database size={20} /> {isEditing ? 'Atualizar no D1' : 'Salvar no D1'}</>
               )}
             </button>
           </div>

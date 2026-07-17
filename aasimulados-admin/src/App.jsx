@@ -31,8 +31,10 @@ export default function AdminApp() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // --- CONFIGURAÇÃO DA API (FIXA) ---
+  const API_URL = 'https://aasimulado-api.igor-coelhodc.workers.dev/';
+
   // --- ESTADOS DA API ---
-  const [apiUrl, setApiUrl] = useState('https://SEU-WORKER.SEU-USUARIO.workers.dev');
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -51,22 +53,19 @@ export default function AdminApp() {
     if (currentView === 'questions' || currentView === 'dashboard') {
       fetchQuestions();
     }
-  }, [currentView, apiUrl]);
+  }, [currentView]); // Removido apiUrl da array de dependências
 
   const fetchQuestions = async () => {
-    if (!apiUrl.startsWith('http')) return;
-    
     setIsLoading(true);
     setErrorMsg('');
     try {
-      // Como o worker retorna RANDOM() LIMIT 10, essa lista mudará a cada busca
-      const res = await fetch(`${apiUrl.replace(/\/$/, '')}/api/questoes`);
+      const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes`);
       if (!res.ok) throw new Error(`Erro API: ${res.status}`);
       const data = await res.json();
       setQuestions(data);
     } catch (err) {
       console.error(err);
-      setErrorMsg('Não foi possível conectar à API. Verifique a URL do Cloudflare Worker no Dashboard.');
+      setErrorMsg('Não foi possível conectar à API.');
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +73,6 @@ export default function AdminApp() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    if (!apiUrl.startsWith('http')) return alert('Configure a URL do seu Worker na tela de login primeiro.');
     setAuthLoading(true);
     setErrorMsg('');
 
@@ -84,7 +82,7 @@ export default function AdminApp() {
       : { email: authEmail, password: authPassword };
 
     try {
-      const res = await fetch(`${apiUrl.replace(/\/$/, '')}${endpoint}`, {
+      const res = await fetch(`${API_URL.replace(/\/$/, '')}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -139,7 +137,7 @@ export default function AdminApp() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold text-[#2C3E50]">Visão Geral</h2>
       
-      {/* Configuração da API */}
+      {/* Configuração da API - Agora Somente Leitura */}
       <div className="bg-[#1E88E5]/5 border border-[#1E88E5]/20 p-6 rounded-3xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#1E88E5]">
@@ -147,17 +145,13 @@ export default function AdminApp() {
           </div>
           <div>
             <h3 className="font-bold text-[#2C3E50]">Conexão Cloudflare D1</h3>
-            <p className="text-sm text-[#2C3E50]/70">URL base do seu Worker da API</p>
+            <p className="text-sm text-[#2C3E50]/70">URL base conectada no momento</p>
           </div>
         </div>
         <div className="w-full sm:w-auto flex flex-1 max-w-md gap-2">
-          <input 
-            type="text" 
-            value={apiUrl}
-            onChange={(e) => setApiUrl(e.target.value)}
-            placeholder="https://seu-worker..." 
-            className="flex-1 p-3 rounded-xl border border-gray-200 outline-none focus:border-[#1E88E5] text-sm"
-          />
+          <div className="flex-1 p-3 rounded-xl border border-gray-200 bg-gray-50 text-[#2C3E50]/60 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+            {API_URL}
+          </div>
           <button 
             onClick={fetchQuestions}
             className="bg-[#1E88E5] hover:bg-[#1565C0] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
@@ -341,7 +335,7 @@ export default function AdminApp() {
 
       setIsSaving(true);
       try {
-        const res = await fetch(`${apiUrl.replace(/\/$/, '')}/api/questoes`, {
+        const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -487,16 +481,7 @@ export default function AdminApp() {
             {isRegistering ? 'Cadastre um novo instrutor' : 'Faça login para acessar o painel'}
           </p>
 
-          <div className="mb-6">
-            <label className="text-sm font-semibold mb-1 block">URL do Cloudflare Worker (API)</label>
-            <input 
-              type="text" 
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
-              className="w-full p-3 rounded-xl border border-[#1E88E5]/30 focus:border-[#1E88E5] focus:ring-2 focus:ring-[#1E88E5]/20 outline-none text-sm bg-[#1E88E5]/5 font-medium"
-              placeholder="https://seu-worker..."
-            />
-          </div>
+          {/* O campo de input da API foi deletado daqui */}
 
           {errorMsg && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 text-sm font-medium mb-4 text-center">

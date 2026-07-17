@@ -173,7 +173,7 @@ export default function AdminApp() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold text-[#2C3E50]">Visão Geral</h2>
       
-      {/* Configuração da API - Agora Somente Leitura */}
+      {/* Banner de Conexão com o Banco */}
       <div className="bg-[#1E88E5]/5 border border-[#1E88E5]/20 p-6 rounded-3xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#1E88E5]">
@@ -181,18 +181,17 @@ export default function AdminApp() {
           </div>
           <div>
             <h3 className="font-bold text-[#2C3E50]">Conexão Cloudflare D1</h3>
-            <p className="text-sm text-[#2C3E50]/70">URL base conectada no momento</p>
+            <p className="text-sm text-[#2C3E50]/70">Status da integração com a API</p>
           </div>
         </div>
-        <div className="w-full sm:w-auto flex flex-1 max-w-md gap-2">
-          <div className="flex-1 p-3 rounded-xl border border-gray-200 bg-gray-50 text-[#2C3E50]/60 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-            {API_URL}
-          </div>
+        
+        {/* Botão de Teste (URL Oculta) */}
+        <div className="w-full sm:w-auto flex justify-end">
           <button 
             onClick={fetchQuestions}
-            className="bg-[#1E88E5] hover:bg-[#1565C0] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
+            className="bg-[#1E88E5] hover:bg-[#1565C0] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-[#1E88E5]/20 transition-all flex items-center gap-2"
           >
-            {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Testar'}
+            {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Testar Conexão'}
           </button>
         </div>
       </div>

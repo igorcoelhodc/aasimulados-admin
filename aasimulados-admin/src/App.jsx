@@ -334,6 +334,9 @@ export default function AdminApp() {
 
   // 3. Formulário de Nova Questão (Adaptado para D1)
 const AddQuestionView = () => {
+
+    const EXAM_OPTIONS = ['PPA', 'PCA', 'PLA', 'PPH', 'PCH', 'AVI', 'CEL', 'GMP', 'CT'];
+
     const [isSaving, setIsSaving] = useState(false);
     const isEditing = !!editingQuestion;
     
@@ -341,6 +344,11 @@ const AddQuestionView = () => {
     const [categoryId, setCategoryId] = useState(isEditing ? editingQuestion.category_id : 1);
     const [questionText, setQuestionText] = useState(isEditing ? editingQuestion.question_text : '');
     const [explanation, setExplanation] = useState(isEditing ? (editingQuestion.explanation || '') : '');
+    const [selectedExams, setSelectedExams] = useState(isEditing && editingQuestion.exams ? editingQuestion.exams.split(',') : []);
+
+    const toggleExam = (exam) => {
+      setSelectedExams(prev => prev.includes(exam) ? prev.filter(e => e !== exam) : [...prev, exam]);
+    };
     
     const [options, setOptions] = useState([
       { letter: 'A', text: isEditing ? editingQuestion.option_a : '', isCorrect: isEditing ? editingQuestion.correct_answer === 'A' : true },
@@ -366,6 +374,14 @@ const AddQuestionView = () => {
     const handleSave = async () => {
       if (!questionText.trim()) return alert("O enunciado da questão é obrigatório.");
       if (options.some(o => !o.text.trim())) return alert("Preencha todas as 4 alternativas.");
+
+      if (selectedExams.length === 0) return alert("Selecione pelo menos uma categoria (PPA, PCA, etc).");
+
+      const payload = {
+        category_id: categoryId,
+        explanation: explanation || null,
+        exams: selectedExams.join(',')
+      };
 
       const correctAnswerObj = options.find(o => o.isCorrect);
 
@@ -439,6 +455,30 @@ const AddQuestionView = () => {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+          </div>
+
+          {/* Múltiplas Categorias (Licenças) */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-[#2C3E50]">Aplicabilidade (Exames/Cursos)</label>
+            <div className="flex flex-wrap gap-2">
+              {EXAM_OPTIONS.map(exam => (
+                <button
+                  key={exam}
+                  type="button"
+                  onClick={() => toggleExam(exam)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                    selectedExams.includes(exam) 
+                      ? 'bg-[#1E88E5] text-white border-[#1E88E5] shadow-md shadow-[#1E88E5]/30' 
+                      : 'bg-gray-50 text-[#2C3E50]/60 border-gray-200 hover:border-[#1E88E5]/50'
+                  }`}
+                >
+                  {exam}
+                </button>
+              ))}
+            </div>
+            {selectedExams.length === 0 && (
+              <p className="text-xs text-[#FF6D00] font-medium">Selecione pelo menos uma categoria.</p>
+            )}
           </div>
 
           <div className="space-y-2">

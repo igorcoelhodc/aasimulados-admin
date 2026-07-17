@@ -95,10 +95,16 @@ export default function AdminApp() {
       if (isRegistering) {
         alert('Instrutor cadastrado com sucesso! Faça login agora.');
         setIsRegistering(false);
+        // Limpeza dos campos após o cadastro
+        setAuthName('');
+        setAuthEmail('');
         setAuthPassword('');
       } else {
         setToken(data.token);
         setUser(data.user);
+        // Limpeza dos campos após o login
+        setAuthEmail('');
+        setAuthPassword('');
       }
     } catch (err) {
       setErrorMsg(err.message);
@@ -108,8 +114,14 @@ export default function AdminApp() {
   };
 
   const handleLogout = () => {
+    // Destruição da sessão
     setToken(null);
     setUser(null);
+    
+    // Limpeza de segurança dos campos do formulário
+    setAuthEmail('');
+    setAuthPassword('');
+    setAuthName('');
   };
 
   // --- COMPONENTES DE LAYOUT ---

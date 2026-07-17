@@ -377,12 +377,6 @@ const AddQuestionView = () => {
 
       if (selectedExams.length === 0) return alert("Selecione pelo menos uma categoria (PPA, PCA, etc).");
 
-      const payload = {
-        category_id: categoryId,
-        explanation: explanation || null,
-        exams: selectedExams.join(',')
-      };
-
       const correctAnswerObj = options.find(o => o.isCorrect);
 
       const payload = {
@@ -393,7 +387,8 @@ const AddQuestionView = () => {
         option_c: options[2].text,
         option_d: options[3].text,
         correct_answer: correctAnswerObj.letter,
-        explanation: explanation || null
+        explanation: explanation || null,
+        exams: selectedExams.join(',')
       };
 
       setIsSaving(true);

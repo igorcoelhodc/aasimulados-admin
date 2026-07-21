@@ -180,7 +180,7 @@ export default function AdminApp() {
             <Database size={24} />
           </div>
           <div>
-            <h3 className="font-bold text-[#2C3E50]">Conexão Cloudflare D1</h3>
+            <h3 className="font-bold text-[#2C3E50]">Conexão ao Banco de Dados</h3>
             <p className="text-sm text-[#2C3E50]/70">Status da integração com a API</p>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function AdminApp() {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-2xl font-bold text-[#2C3E50]">Banco de Questões (Amostra D1)</h2>
+          <h2 className="text-2xl font-bold text-[#2C3E50]">Banco de Questões</h2>
           <div className="flex gap-2">
             <button 
               onClick={fetchQuestions}
@@ -331,7 +331,7 @@ export default function AdminApp() {
     );
   };
 
-  // 3. Formulário de Nova Questão (Adaptado para D1)
+  // 3. Formulário de Nova Questão
 const AddQuestionView = () => {
 
     const EXAM_OPTIONS = ['PPA', 'PCA', 'PLA', 'PPH', 'PCH', 'AVI', 'CEL', 'GMP', 'CT'];
@@ -544,7 +544,7 @@ const AddQuestionView = () => {
               {isSaving ? (
                 <><Loader2 size={20} className="animate-spin" /> Salvando...</>
               ) : (
-                <><Database size={20} /> {isEditing ? 'Atualizar no D1' : 'Salvar no D1'}</>
+                <><Database size={20} /> {isEditing ? 'Atualizar' : 'Salvar'}</>
               )}
             </button>
           </div>
@@ -647,7 +647,7 @@ const AddQuestionView = () => {
 
         <nav className="flex-1 space-y-2">
           <SidebarItem icon={LayoutDashboard} label="Dashboard" viewId="dashboard" />
-          <SidebarItem icon={FileQuestion} label="Questões no D1" viewId="questions" />
+          <SidebarItem icon={FileQuestion} label="Questões" viewId="questions" />
           <SidebarItem icon={PlusCircle} label="Cadastrar Questão" viewId="add_question" />
           <div className="pt-4 mt-4 border-t border-gray-100 opacity-50 cursor-not-allowed">
              <SidebarItem icon={Users} label="Alunos (Em Breve)" viewId="users" />
@@ -694,7 +694,7 @@ const AddQuestionView = () => {
         </div>
         <nav className="space-y-2">
           <SidebarItem icon={LayoutDashboard} label="Dashboard" viewId="dashboard" />
-          <SidebarItem icon={FileQuestion} label="Questões no D1" viewId="questions" />
+          <SidebarItem icon={FileQuestion} label="Questões" viewId="questions" />
           <SidebarItem icon={PlusCircle} label="Cadastrar" viewId="add_question" />
         </nav>
       </aside>

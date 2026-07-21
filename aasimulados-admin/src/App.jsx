@@ -603,7 +603,7 @@ const AddQuestionView = () => {
               <PlaneTakeoff size={28} />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-center mb-2">Aero<span className="text-[#1E88E5]">Admin</span></h2>
+          <h2 className="text-2xl font-bold text-center mb-2">Simulados <span className="text-[#1E88E5]">Admin</span></h2>
           <p className="text-center text-gray-500 mb-8">
             {isRegistering ? 'Cadastre-se' : 'Faça login'}
           </p>
@@ -727,7 +727,7 @@ const AddQuestionView = () => {
             <PlaneTakeoff size={20} />
           </div>
           <span className="font-poppins font-bold text-xl tracking-tight">
-            Aero<span className="text-[#1E88E5]">Admin</span>
+            Simulados<span className="text-[#1E88E5]">Admin</span>
           </span>
         </div>
         <nav className="space-y-2">

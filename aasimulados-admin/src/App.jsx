@@ -60,7 +60,9 @@ export default function AdminApp() {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes`);
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/questoes`, { headers });
       if (!res.ok) throw new Error(`Erro API: ${res.status}`);
       const data = await res.json();
       setQuestions(data);
@@ -227,15 +229,33 @@ export default function AdminApp() {
     </div>
   );
 
-  // 2. Lista de Questões
+  // 2. Lista de Questões com Paginação
   const QuestionsListView = () => {
     // Helper para achar o nome da categoria pelo ID
     const getCatName = (id) => CATEGORIES.find(c => c.id == id)?.name || `Cat ${id}`;
 
+    // --- ESTADOS DA PAGINAÇÃO ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // --- MATEMÁTICA DA PAGINAÇÃO ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentQuestions = questions.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(questions.length / itemsPerPage);
+
+    const handleNextPage = () => {
+      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const handlePrevPage = () => {
+      if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-2xl font-bold text-[#2C3E50]">Banco de Questões</h2>
+          <h2 className="text-2xl font-bold text-[#2C3E50]">Banco de Questões ({questions.length} total)</h2>
           <div className="flex gap-2">
             <button 
               onClick={fetchQuestions}
@@ -252,7 +272,7 @@ export default function AdminApp() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden min-h-[400px]">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden min-h-[400px] flex flex-col">
           <div className="p-4 border-b border-gray-100 flex items-center gap-2">
             <Search size={18} className="text-gray-400" />
             <input 
@@ -263,11 +283,11 @@ export default function AdminApp() {
             />
           </div>
           
-          <div className="overflow-x-auto relative">
+          <div className="overflow-x-auto relative flex-1">
             {isLoading && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center z-10">
                 <Loader2 size={32} className="animate-spin text-[#1E88E5] mb-2" />
-                <p className="text-sm font-medium text-[#2C3E50]/70">Buscando na Cloudflare...</p>
+                <p className="text-sm font-medium text-[#2C3E50]/70">Buscando no D1...</p>
               </div>
             )}
 
@@ -284,11 +304,12 @@ export default function AdminApp() {
                 {questions.length === 0 && !isLoading && (
                   <tr>
                     <td colSpan="4" className="p-8 text-center text-gray-500">
-                      Nenhuma questão encontrada. Verifique a conexão com a API ou cadastre uma nova.
+                      Nenhuma questão encontrada. Cadastre uma nova.
                     </td>
                   </tr>
                 )}
-                {questions.map((q, idx) => (
+                {/* Alterado: Renderizando apenas as questões da página atual (currentQuestions) */}
+                {currentQuestions.map((q, idx) => (
                   <tr key={q.id || idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="p-4 max-w-md">
                       <p className="font-medium text-[#2C3E50] line-clamp-2" title={q.question_text}>{q.question_text}</p>
@@ -307,25 +328,11 @@ export default function AdminApp() {
                       <div className="flex items-center justify-end gap-2">
                         {user?.role === 'admin' ? (
                           <>
-                            <button 
-                              onClick={() => handleEditClick(q)}
-                              className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" 
-                              title="Editar"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteQuestion(q.id)}
-                              className="p-2 text-gray-400 hover:text-red-500 transition-colors" 
-                              title="Excluir"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <button onClick={() => handleEditClick(q)} className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" title="Editar"><Edit size={18} /></button>
+                            <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir"><Trash2 size={18} /></button>
                           </>
                         ) : (
-                          <span className="text-xs font-medium bg-gray-100 text-gray-400 px-3 py-1 rounded-lg">
-                            Somente Leitura
-                          </span>
+                          <span className="text-xs font-medium bg-gray-100 text-gray-400 px-3 py-1 rounded-lg">Somente Leitura</span>
                         )}
                       </div>
                     </td>
@@ -334,6 +341,31 @@ export default function AdminApp() {
               </tbody>
             </table>
           </div>
+
+          {/* CONTROLES DE PAGINAÇÃO */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/30">
+              <span className="text-sm text-gray-500 font-medium">
+                Página <strong className="text-[#2C3E50]">{currentPage}</strong> de <strong className="text-[#2C3E50]">{totalPages}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handlePrevPage} 
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-semibold text-[#2C3E50] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Anterior
+                </button>
+                <button 
+                  onClick={handleNextPage} 
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-semibold text-[#2C3E50] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -718,18 +750,10 @@ const AddQuestionView = () => {
               <Menu size={24} />
             </button>
             <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 font-medium">
-               Painel Administrativo da Nuvem
+               Painel Administrativo
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="hidden sm:block text-sm font-bold text-[#2C3E50]">Olá, {user?.name?.split(' ')[0]}</span>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1E88E5] to-[#00E5FF] p-[1px]">
-              <div className="w-full h-full bg-[#1E88E5] text-white rounded-full flex items-center justify-center font-bold text-sm">
-                {user?.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-            </div>
-          </div>
         </header>
 
         {/* CONTENT RENDERER */}

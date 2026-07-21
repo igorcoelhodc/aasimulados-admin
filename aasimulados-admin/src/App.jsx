@@ -679,7 +679,7 @@ const AddQuestionView = () => {
             <PlaneTakeoff size={20} />
           </div>
           <span className="font-poppins font-bold text-xl tracking-tight">
-            Aero<span className="text-[#1E88E5]">Admin</span>
+            Simulados<span className="text-[#1E88E5]">Admin</span>
           </span>
         </div>
 

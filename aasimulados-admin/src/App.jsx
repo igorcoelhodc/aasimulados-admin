@@ -117,7 +117,7 @@ export default function AdminApp() {
       if (!res.ok) throw new Error(data.error || 'Erro na autenticação');
 
       if (isRegistering) {
-        alert('Instrutor cadastrado com sucesso! Faça login agora.');
+        alert('Cadastrado com sucesso! Faça login agora.');
         setIsRegistering(false);
         // Limpeza dos campos após o cadastro
         setAuthName('');
@@ -305,20 +305,28 @@ export default function AdminApp() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => handleEditClick(q)}
-                          className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" 
-                          title="Editar"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteQuestion(q.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors" 
-                          title="Excluir"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {user?.role === 'admin' ? (
+                          <>
+                            <button 
+                              onClick={() => handleEditClick(q)}
+                              className="p-2 text-gray-400 hover:text-[#1E88E5] transition-colors" 
+                              title="Editar"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteQuestion(q.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 transition-colors" 
+                              title="Excluir"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs font-medium bg-gray-100 text-gray-400 px-3 py-1 rounded-lg">
+                            Somente Leitura
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -565,10 +573,8 @@ const AddQuestionView = () => {
           </div>
           <h2 className="text-2xl font-bold text-center mb-2">Aero<span className="text-[#1E88E5]">Admin</span></h2>
           <p className="text-center text-gray-500 mb-8">
-            {isRegistering ? 'Cadastre um novo instrutor' : 'Faça login para acessar o painel'}
+            {isRegistering ? 'Cadastre-se' : 'Faça login'}
           </p>
-
-          {/* O campo de input da API foi deletado daqui */}
 
           {errorMsg && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 text-sm font-medium mb-4 text-center">
@@ -623,7 +629,7 @@ const AddQuestionView = () => {
               onClick={() => { setIsRegistering(!isRegistering); setErrorMsg(''); }}
               className="text-sm text-[#1E88E5] font-medium hover:underline"
             >
-              {isRegistering ? 'Já tem conta? Faça login' : 'Novo instrutor? Cadastre-se'}
+              {isRegistering ? 'Já tem conta? Faça login' : 'Novo ? Cadastre-se'}
             </button>
           </div>
         </div>
